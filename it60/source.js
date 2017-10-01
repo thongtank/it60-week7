@@ -27,6 +27,10 @@ var close_modal = function() {
     modal.modal('hide');
 };
 
+var alert_success = function(text) {
+    swal("Good job!", text, "success");
+};
+
 // Get Datas form API Server
 var get_data = function() {
     $('tbody').empty();
@@ -40,7 +44,7 @@ var get_data = function() {
 
             let table_row = `<tr> \
                 <td align=center> \
-                    <a href='#/delete/student/${val.std_id}' onClick=delete_data(this) title='ลบรหัสนักศึกษา ${val.std_id}'> \
+                    <a href='#' data-id=${val.std_id} onClick=delete_data(this) title='ลบรหัสนักศึกษา ${val.std_id}'> \
                         <i class="fa fa-trash" aria-hidden="true"></i> \
                     </a> | \
                     <a class='editLink' onClick=update_data('${val.std_id}') href='#' title='แก้ไขข้อมูลนักศึกษา - ${val.std_id}'> \
@@ -75,7 +79,7 @@ var delete_data = function(el) {
                         url: 'http://localhost:80/learning60/week7/deletedata.api.php',
                         type: 'POST',
                         dataType: 'json',
-                        data: { std_id: $(el).attr('href') },
+                        data: { std_id: $(el).attr('data-id') },
                         headers: {
                             'Authorization': 'Basic ' + btoa(`${usr}:${pwd}`)
                         },
@@ -83,12 +87,11 @@ var delete_data = function(el) {
                         //     xhr.setRequestHeader("Authorization", "Basic " + btoa(username + ":" + password));
                         // }
                     })
-                    .done(function(data) {
-                        // swal("Poof! Your imaginary file has been deleted!", {
-                        //     icon: "success",
-                        // });
-                        if (data.code == 200) {
-                            window.location.replace('http://localhost/learning60/week7/it60/');
+                    .done(function(data, textStatus, jqXHR) {
+                        if (jqXHR.status == 200) {
+                            // window.location.replace('http://localhost/learning60/week7/it60/');
+                            alert_success('การลบข้อมูลเสร็จสมบูรณ์');
+                            get_data();
                         } else {
                             swal({
                                 title: "Delete Failed!",
@@ -99,11 +102,9 @@ var delete_data = function(el) {
                             });
                         }
                     })
-                    .fail(function(err) {
-                        console.log(`ERROR : ${err}`);
+                    .fail(function(jqXHR, textStatus, errorThrown) {
+                        console.log(`ERROR : ${textStatus}`);
                     });
-            } else {
-                // swal("Your imaginary file is safe!");
             }
         });
 };
@@ -121,46 +122,35 @@ $(function() {
             std_gender: $(this).find('#std_gender:checked').val(),
             std_age: $(this).find('#std_age').val(),
         }, function(data, textStatus, xhr) {
-            swal("Good job!", "การลงทะเบียนเสร็จสมบูรณ์", "success");
-            form.find('#reset').trigger('click');
+            alert_success('การลงทะเบียนเสร็จสมบูรณ์');
             get_data();
-            // let gender = 'ชาย';
-            // if ($('#std_gender').val() == 'f') {
-            //     gender = 'หญิง';
-            // }
-
-            // let table_row = `<tr> \
-            // <td>${$('#std_id').val()}</td> \
-            // <td>${$('#std_fname').val()} ${$('#std_lname').val()}</td> \
-            // <td>${gender}</td> \
-            // <td>${$('#std_age').val()}</td> \
-            // </tr>`;
-
-            // $(table_row).appendTo('tbody');
+            form.find('#reset').trigger('click');
         });
     });
 
     const form_update = $('form#update_student');
     form_update.submit(function(event) {
-        console.log($(this).serializeArray());
+        let data = $(this).serializeArray();
+        let d = {};
+        $.each(data, function(index, val) {
+            d[data[index].name] = data[index].value;
+        });
+        $.ajax({
+                url: 'http://localhost:80/learning60/week7/updatedata.api.php',
+                type: 'PUT',
+                dataType: 'json',
+                data: { d: d },
+            })
+            .done(function(data, textStatus, jqXHR) {
+                if (jqXHR.status == 200) {
+                    alert_success('การแก้ไขข้อมูลเสร็จสมบูรณ์');
+                    get_data();
+                    close_modal();
+                }
+            })
+            .fail(function(jqXHR, textStatus, errorThrown) {
+                console.log("error : " + textStatus);
+            });
         event.preventDefault();
     });
 });
-// $.post('http://localhost:80/learning60/week7/api.php', {
-//         std_id: $('#std_id').val(),
-//         std_fname: $('#std_fname').val(),
-//         std_lname: $('#std_lname').val(),
-//         std_gender: $('#std_gender').val(),
-//         std_age: $('#std_age').val(),
-//     }, 'json')
-//     .done(function(data, textStatus, jqXHR) {
-//         // let js = jQuery.parseJSON(data);
-//         // console.log(`Success ${data.msg}`);
-//         swal("Good job!", "Create Student Successfully", "success");
-//     })
-//     .fail(function(data, textStatus, jqXHR) {
-//         console.log(`Fail ${data}, Status ${textStatus}`);
-//     })
-//     .always(function() {
-//         form.find('#reset').trigger('click');
-//     });

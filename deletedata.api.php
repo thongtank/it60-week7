@@ -6,14 +6,13 @@ header('Content-type: application/json;charset=utf-8');
 
 require_once 'database.php';
 
-// $headers = apache_request_headers();
-// print json_encode($headers);
 if (!(isset($_SERVER['PHP_AUTH_USER'], $_SERVER['PHP_AUTH_PW']) && $_SERVER['PHP_AUTH_USER'] == 'panchai' && $_SERVER['PHP_AUTH_PW'] == '489329')) {
     header('WWW-Authenticate: Basic realm="Restricted area"');
     header('HTTP/1.1 401 Unauthorized');
     exit;
 } else {
-    $std_id = explode('/', $_POST['std_id'])[3];
+    // $std_id = explode('/', $_POST['std_id'])[3];
+    $std_id = $_POST['std_id'];
     $sql = sprintf('DELETE FROM `tb_students` WHERE std_id = \'%s\';', $std_id);
     $rs = mysqli_query($link, $sql);
     $response = array('message' => '', 'code' => 0);
